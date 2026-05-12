@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-podman-compose down --keep-volumes
+podman-compose down
 
 sudo rm -r certificates/*
 
