@@ -63,6 +63,8 @@ services:
     container_name: gateway
     restart: unless-stopped
     networks: [iot-network]
+    environment:
+      TB_DEVICE_TOKEN: ""
     volumes:
       - ./certificates/ca.crt:/certs/ca.crt:ro
       - ./certificates/client.crt:/certs/client.crt:ro
