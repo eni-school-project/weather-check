@@ -16,6 +16,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
+
   mosquitto:
     image: eclipse-mosquitto:alpine
     container_name: mosquitto
@@ -32,7 +33,7 @@ services:
       - ./certificates/mosquitto-server.key:/certs/server.key:ro
 
 
-  thingsboard-ce:
+  thingsboard:
     image: thingsboard/tb-node:4.3.1.1
     container_name: thingsboard
     restart: always
@@ -45,16 +46,17 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/thingsboard
       MQTT_SSL_ENABLED: "true"
       MQTT_SSL_CREDENTIALS_TYPE: PEM
-      MQTT_SSL_PEM_CERT: /certs/server.crt
+      MQTT_SSL_PEM_CERT: /certs/thingsboard-chain.crt
       MQTT_SSL_PEM_KEY: /certs/server.key
       MQTT_SSL_PEM_KEY_PASSWORD: ""
     volumes:
       - ./certificates/ca.crt:/certs/ca.crt:ro
-      - ./certificates/thingsboard-server.crt:/certs/server.crt:ro
+      - ./certificates/thingsboard-chain.crt:/certs/thingsboard-chain.crt:ro
       - ./certificates/thingsboard-server.key:/certs/server.key:ro
 
     depends_on:
       - postgres
+
 
   gateway:
     build: ./gateway
@@ -68,7 +70,7 @@ services:
 
     depends_on:
       - mosquitto
-      - thingsboard-ce
+      - thingsboard
 
 
 volumes:

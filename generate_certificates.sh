@@ -6,7 +6,11 @@ mkdir -p certificates
 
 # CA
 openssl genrsa -des3 -out certificates/ca.key 4096
-openssl req -new -x509 -days 3650 -key certificates/ca.key -out certificates/ca.crt -subj "/CN=Mandrindra_GCP_CA"
+openssl req -new -x509 -days 3650 -key certificates/ca.key \
+  -out certificates/ca.crt \
+  -subj "/CN=Mandrindra_GCP_CA" \
+  -addext "basicConstraints=critical,CA:TRUE" \
+  -addext "keyUsage=critical,keyCertSign,cRLSign"
 
 # Mosquitto
 openssl genrsa -out certificates/mosquitto-server.key 2048
@@ -19,12 +23,12 @@ openssl x509 -req -days 365 \
 
 
 # ThingsBoard
-openssl genrsa -out certificates/thingsboard-server.key 2048
+openssl ecparam -out certificates/thingsboard-server.key -name secp256r1 -genkey
 openssl req -new -key certificates/thingsboard-server.key -out certificates/thingsboard-server.csr -subj "/CN=thingsboard"
 
 openssl x509 -req -days 365 \
   -in certificates/thingsboard-server.csr -CA certificates/ca.crt -CAkey certificates/ca.key -CAcreateserial \
-  -out certificates/thingsboard-server.crt -sha256 \
+  -out certificates/thingsboard-server.crt \
   -extfile <(printf "subjectAltName=DNS:thingsboard")
 
 
@@ -35,5 +39,9 @@ openssl req -new -key certificates/client.key -out certificates/client.csr -subj
 openssl x509 -req -days 365 \
   -in certificates/client.csr -CA certificates/ca.crt -CAkey certificates/ca.key -CAcreateserial \
   -out certificates/client.crt -sha256
+
+cat certificates/thingsboard-server.crt certificates/ca.crt > certificates/thingsboard-chain.crt
+
+chmod 644 certificates/*.crt certificates/*.key
 
 echo "[All done.]\_(:D)-|--<"

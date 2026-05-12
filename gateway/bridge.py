@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import paho.mqtt.client as mqtt
+import os
 import ssl
 import time
 
@@ -14,7 +15,7 @@ MOSQUITTO = {
 THINGSBOARD = {
 	"host": "thingsboard",
 	"port": 8883,
-	"token": "your-device-token-here",
+	"token": os.environ["TB_DEVICE_TOKEN"],
 	"topic": "v1/devices/me/telemetry",
 }
 
