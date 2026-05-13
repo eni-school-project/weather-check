@@ -1,0 +1,5 @@
+user esp32-client
+topic write esp32/sensors
+
+user gateway-client
+topic read esp32/sensors
