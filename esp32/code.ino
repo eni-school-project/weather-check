@@ -1,5 +1,4 @@
 #include <WiFi.h>
-#include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 #include <Wire.h>
 #include <Adafruit_BMP085.h>
@@ -8,22 +7,7 @@ const char* wifi_ssid = "vxlaHjfkagkyjd";
 const char* wifi_password = "araragimyguy";
 const char* mqtt_server_broker = "192.168.87.30";
 
-const char* CA_CERT = R"(
------BEGIN CERTIFICATE-----
------END CERTIFICATE-----
-)";
-
-const char* CLIENT_CERT = R"(
------BEGIN CERTIFICATE-----
------END CERTIFICATE-----
-)";
-
-const char* CLIENT_KEY = R"(
------BEGIN PRIVATE KEY-----
------END PRIVATE KEY-----
-)";
-
-WiFiClientSecure esp_wifi_client;
+WiFiClient esp_wifi_client;
 PubSubClient client(esp_wifi_client);
 
 const int MQTT_BUFFER = 512;
