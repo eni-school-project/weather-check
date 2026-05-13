@@ -28,6 +28,7 @@ def connect_with_retry(client, host, port, label):
       print(f"[{label}] Not ready ({e}), retrying in 5s...")
       time.sleep(5)
 
+
 def tls_mtls():
 	"""mTLS: verify server and present client cert."""
 	ctx = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
@@ -43,29 +44,29 @@ def tls_server_only():
 	return ctx
 
 
-def on_tb_connect(client, userdata, flags, rc):
-	if rc == 0:
-		print("[TB] Connected")
-	else:
-		print(f"[TB] Connection failed rc={rc}")
+def on_tb_connect(client, userdata, connect_flags, reason_code, properties):
+  if not reason_code.is_failure:
+    print("[TB] Connected")
+  else:
+    print(f"[TB] Connection failed rc={reason_code}")
 
 
-def on_tb_disconnect(client, userdata, rc):
-	if rc != 0:
-		print(f"[TB] Unexpected disconnect rc={rc}, will retry")
+def on_tb_disconnect(client, userdata, disconnect_flags, reason_code, properties):
+  if reason_code.is_failure:
+    print(f"[TB] Unexpected disconnect rc={reason_code}, will retry")
 
 
-def on_mosquitto_connect(client, userdata, flags, rc):
-	if rc == 0:
-		print("[MQTT] Connected")
-		client.subscribe(MOSQUITTO["topic"])
-	else:
-		print(f"[MQTT] Connection failed rc={rc}")
+def on_mosquitto_connect(client, userdata, connect_flags, reason_code, properties):
+    if not reason_code.is_failure:
+      print("[MQTT] Connected")
+      client.subscribe(MOSQUITTO["topic"])
+    else:
+   		print(f"[MQTT] Connection failed rc={reason_code}")
 
 
-def on_mosquitto_disconnect(client, userdata, rc):
-	if rc != 0:
-		print(f"[MQTT] Unexpected disconnect rc={rc}, will retry")
+def on_mosquitto_disconnect(client, userdata, disconnect_flags, reason_code, properties):
+  if reason_code.is_failure:
+    print(f"[MQTT] Unexpected disconnect rc={reason_code}, will retry")
 
 
 def on_mosquitto_message(client, userdata, msg):
