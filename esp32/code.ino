@@ -1,14 +1,32 @@
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 #include <Wire.h>
 #include <Adafruit_BMP085.h>
 
-const char* wifi_ssid = "";
-const char* wifi_password = "";
-const char* mqtt_server_broker = "192.168.1.146";
+const char* wifi_ssid = "vxlaHjfkagkyjd";
+const char* wifi_password = "araragimyguy";
+const char* mqtt_server_broker = "192.168.87.30";
 
-WiFiClient esp_wifi_client;
+const char* CA_CERT = R"(
+-----BEGIN CERTIFICATE-----
+-----END CERTIFICATE-----
+)";
+
+const char* CLIENT_CERT = R"(
+-----BEGIN CERTIFICATE-----
+-----END CERTIFICATE-----
+)";
+
+const char* CLIENT_KEY = R"(
+-----BEGIN PRIVATE KEY-----
+-----END PRIVATE KEY-----
+)";
+
+WiFiClientSecure esp_wifi_client;
 PubSubClient client(esp_wifi_client);
+
+const int MQTT_BUFFER = 512;
 
 Adafruit_BMP085 bmp;
 
@@ -49,16 +67,16 @@ void all_LEDs_off() {
   digitalWrite(LED_ROUGE, LOW);
 }
 
-void set_LED_status(bool mqtt_ok, bool sensors_ok) {
+void set_LED_status(bool mqtt_ok, bool is_atmosphere_normal) {
   all_LEDs_off();
 
   if (!mqtt_ok) {
     digitalWrite(LED_ROUGE, HIGH);
-  } else if (sensors_ok) {
-    // mqtt works but sensors don't
+  } else if (is_atmosphere_normal) {
+    // mqtt works and atmosphere is normal
     digitalWrite(LED_VERTE, HIGH);
   } else {
-    // nothing works
+    // something ain't right
     digitalWrite(LED_ORANGE, HIGH);
   }
 }
@@ -77,7 +95,7 @@ bool check_atmosphere(float temperature, float pressure, int gas) {
 
 void setup_wifi() {
   Serial.print("Connecting WiFi");
-  WiFi.begin(ssid, password);
+  WiFi.begin(wifi_ssid, wifi_password);
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -96,11 +114,10 @@ void mqtt_reconnect() {
 
     set_LED_status(false, false);
 
-    if (client.connect("LOCAL_MOSQUITTO")) {
+    if (client.connect("esp32-client")) {
       Serial.println("connected");
     } else {
-      Serial.print("failed, rc=");
-      Serial.println(client.state());
+      Serial.printf("failed, rc=%d\n", client.state());
 
       delay(2000);
     }
@@ -113,7 +130,12 @@ void setup() {
   setup_LEDs();
   setup_wifi();
 
-  client.setServer(mqtt_server, 1883);
+  esp_wifi_client.setCACert(CA_CERT);
+  esp_wifi_client.setCertificate(CLIENT_CERT);
+  esp_wifi_client.setPrivateKey(CLIENT_KEY);
+
+  client.setBufferSize(MQTT_BUFFER);
+  client.setServer(mqtt_server_broker, 8883);
 
   // SDA and SCL
   Wire.begin(21, 22);
@@ -137,11 +159,11 @@ void loop() {
   // and convert to hecto-pascal by dividing by 100
   float pressure = bmp.readPressure() / 100.0;
 
-  bool sensors_ok = check_atmosphere(temperature, pressure, gas_value);
+  bool is_atmosphere_normal = check_atmosphere(temperature, pressure, gas_value);
   bool mqtt_ok = client.connected();
 
   // update LEDs
-  set_LED_status(mqtt_ok, sensors_ok);
+  set_LED_status(mqtt_ok, is_atmosphere_normal);
 
   /*
    * Publish retrieved values periodically to MQTT
@@ -155,7 +177,7 @@ void loop() {
     payload += "\"gas\":" + String(gas_value);
     payload += ",\"temperature\":" + String(temperature, 1);
     payload += ",\"pressure\":" + String(pressure, 1);
-    payload += ",\"sensors_ok\":" + String(sensors_ok ? "true" : "false");
+    payload += ",\"is_atmosphere_normal\":" + String(is_atmosphere_normal ? "true" : "false");
     payload += "}";
 
     Serial.println("- Publishing: " + payload);
