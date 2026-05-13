@@ -35,7 +35,7 @@ Adafruit_BMP085 bmp;
  * Timing publish interval
  * */
 unsigned long last_publish_time = 0;
-const long PUBLISH_INTERVAL = 3000;
+const long PUBLISH_INTERVAL = 300;
 
 
 void setup_LEDs() {
@@ -114,12 +114,8 @@ void setup() {
   setup_LEDs();
   setup_wifi();
 
-  esp_wifi_client.setCACert(CA_CERT);
-  esp_wifi_client.setCertificate(CLIENT_CERT);
-  esp_wifi_client.setPrivateKey(CLIENT_KEY);
-
   client.setBufferSize(MQTT_BUFFER);
-  client.setServer(mqtt_server_broker, 8883);
+  client.setServer(mqtt_server_broker, 1883);
 
   // SDA and SCL
   Wire.begin(21, 22);
@@ -172,5 +168,5 @@ void loop() {
     }
   }
 
-  delay(100);
+  delay(1000);
 }
