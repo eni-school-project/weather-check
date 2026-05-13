@@ -57,11 +57,11 @@ def on_tb_disconnect(client, userdata, disconnect_flags, reason_code, properties
 
 
 def on_mosquitto_connect(client, userdata, connect_flags, reason_code, properties):
-    if not reason_code.is_failure:
-      print("[MQTT] Connected")
-      client.subscribe(MOSQUITTO["topic"])
-    else:
-   		print(f"[MQTT] Connection failed rc={reason_code}")
+  if not reason_code.is_failure:
+    print("[MQTT] Connected")
+    client.subscribe(MOSQUITTO["topic"])
+  else:
+    print(f"[MQTT] Connection failed rc={reason_code}")
 
 
 def on_mosquitto_disconnect(client, userdata, disconnect_flags, reason_code, properties):
